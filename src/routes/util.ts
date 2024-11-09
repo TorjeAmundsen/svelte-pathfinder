@@ -73,3 +73,13 @@ export function createWall(
 
     nodes[row][col].isWall = true;
 }
+
+export function pickOrientation(width: number, height: number): boolean {
+    if (width < height) {
+        return true;
+    } else if (width > height) {
+        return false;
+    } else {
+        return Math.floor(Math.random() * 2) === 0 ? true : false;
+    }
+}

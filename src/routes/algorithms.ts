@@ -3,6 +3,7 @@ import {
     delay,
     getRandomNumber,
     isWalkable,
+    pickOrientation,
     type Coordinate,
     type TNode,
 } from "./util";
@@ -73,7 +74,9 @@ export async function recursiveDivisionMaze(
     width: number,
     height: number,
     isHorizontal: boolean,
-
+    nodes: TNode[][],
+    startNode: Coordinate,
+    endNode: Coordinate,
     animationDelay: number,
 ) {
     if (width < 3 || height < 3) {
@@ -109,8 +112,42 @@ export async function recursiveDivisionMaze(
     if (isHorizontal) {
         for (let i = 0; i < wallLength; i++) {
             if (wallX + i !== holeX) {
-                createWall(wallY, wallX + 1);
+                createWall(wallY, wallX + 1, nodes, startNode, endNode);
+                if (animationDelay) await delay(animationDelay);
             }
         }
+    } else {
+        for (let i = 0; i < wallLength; i++) {
+            if (wallY + i !== holeY) {
+                createWall(wallY + i, wallX, nodes, startNode, endNode); // Maybe refactor to have start/end check outside?
+                if (animationDelay) await delay(animationDelay);
+            }
+        }
+    }
+
+    if (isHorizontal) {
+        await recursiveDivisionMaze(
+            x,
+            y,
+            width,
+            Math.abs(wallY - y),
+            pickOrientation(width, Math.abs(wallY - y)),
+            nodes,
+            startNode,
+            endNode,
+            animationDelay,
+        );
+    } else {
+        await recursiveDivisionMaze(
+            x,
+            y,
+            Math.abs(wallX - x),
+            height,
+            pickOrientation(width - (wallX - x) - 1, height),
+            nodes,
+            startNode,
+            endNode,
+            animationDelay,
+        );
     }
 }

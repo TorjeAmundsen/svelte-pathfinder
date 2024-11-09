@@ -28,7 +28,7 @@
 </script>
 
 <div>Pathfinder Test Array</div>
-<button class="search-button" onclick={() => pathfindDjikstra(nodes, startNode, endNode, 0)}>
+<button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 0)}>
     Find Path
 </button>
 <div class="grid-wrapper">

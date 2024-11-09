@@ -19,11 +19,13 @@
         col: totalCols - 3,
         row: totalRows - 3,
     };
+
     function getNodeClass(row: number, col: number) {
         if (row === startNode.row && col === startNode.col) return "node-base node-start";
         if (row === endNode.row && col === endNode.col) return "node-base node-end";
         return "node-base";
     }
+
     console.log("Test logging");
 </script>
 

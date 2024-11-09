@@ -1,6 +1,6 @@
 <script lang="ts">
     import { pathfindDijkstra } from "./algorithms";
-    import { createNewGrid, type Coordinate, type TNode } from "./util";
+    import { createNewGrid, createWall, type Coordinate, type TNode } from "./util";
 
     const totalCols = 21;
     const totalRows = 21;
@@ -21,9 +21,11 @@
     };
 
     function getNodeClass(row: number, col: number) {
-        if (row === startNode.row && col === startNode.col) return "node-base node-start";
-        if (row === endNode.row && col === endNode.col) return "node-base node-end";
-        return "node-base";
+        let classString = "node-base";
+        if (row === startNode.row && col === startNode.col) classString += " node-start";
+        else if (row === endNode.row && col === endNode.col) classString += " node-end";
+        else if (nodes[row][col].isWall) classString += " node-wall";
+        return classString;
     }
 
     console.log("Test logging");
@@ -33,6 +35,7 @@
 <button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 0)}>
     Find Path
 </button>
+<button onclick={() => createWall(5, 5, nodes, startNode, endNode)}> Create wall [5, 5] </button>
 <div class="grid-wrapper">
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
@@ -80,5 +83,9 @@
         &.node-end {
             background-color: hsl(263, 53%, 56%);
         }
+    }
+
+    .node-wall {
+        background-color: hsl(217, 15%, 17%);
     }
 </style>

@@ -84,4 +84,29 @@ export function pickOrientation(width: number, height: number): boolean {
     }
 }
 
+export function backtrackPath(
+    nodes: TNode[][],
+    startNode: Coordinate,
+    endNode: Coordinate,
+): Coordinate[] {
+    const path: Coordinate[] = [];
+    let currentRow = endNode.row;
+    let currentCol = endNode.col;
+    while (currentRow !== startNode.row || currentCol !== startNode.col) {
+        path.unshift({ row: currentRow, col: currentCol });
+        const previous = nodes[currentRow][currentCol].previous;
+        if (previous) {
+            currentRow = previous.row;
+            currentCol = previous.col;
+        } else {
+            return [];
+        }
+    }
+    return path;
+}
+
 export function failedToFindPath() {}
+
+export async function visualizePath(path: Path, elements: HTMLElement[][], animationDelay: number) {
+    animationDelay *= 4;
+}

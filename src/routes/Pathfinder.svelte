@@ -8,11 +8,12 @@
         type TNode,
     } from "./util";
 
-    const totalCols = 45;
     const totalRows = 45;
+    const totalCols = 45;
 
     let nodes: TNode[][] = $state([]);
-    // let styleNodes: string[][] = $state<string[][]>([]);
+
+    let elements: HTMLElement[][] = Array.from(Array(totalRows), () => new Array(totalCols));
 
     let startNode: Coordinate = {
         col: 2,
@@ -44,6 +45,7 @@
     Find Path
 </button>
 <button
+    class="maze-button"
     onclick={() => {
         resetNodes();
         recursiveDivisionMaze(
@@ -55,7 +57,7 @@
             nodes,
             startNode,
             endNode,
-            20,
+            5,
         );
     }}
 >
@@ -64,7 +66,12 @@
 <div class="grid-wrapper">
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
-            <div class={getNodeClass(row, col)}></div>
+            <div
+                id={`${row}, ${col}`}
+                bind:this={elements[row][col]}
+                class={getNodeClass(row, col)}
+                onclick={() => console.log(elements[row][col])}
+            ></div>
             {console.log(`getNodeClass(${row}, ${col}) -> ${getNodeClass(row, col)}`)}
         {/each}
     {/each}
@@ -77,7 +84,8 @@
         --node-transition-time: 100ms;
     }
 
-    .search-button {
+    .search-button,
+    .maze-button {
         padding: 5px;
         width: 6rem;
         margin-top: 4px;
@@ -98,19 +106,28 @@
         height: 1fr;
         outline: 1px solid rgb(156, 156, 156);
         transition: var(--node-transition-time);
+
         &:hover {
             box-shadow: inset 0 0 0.25vw 0.12vw hsla(0, 100%, 50%, 0.33);
             transition: 0ms;
         }
+
         &.node-start {
             background-color: hsl(130, 53%, 56%);
         }
+
         &.node-end {
             background-color: hsl(263, 53%, 56%);
         }
-    }
 
-    .node-wall {
-        background-color: hsl(217, 15%, 17%);
+        &.searching {
+        }
+
+        &.node-wall {
+            background-color: hsl(217, 15%, 17%);
+        }
+        &.found-path {
+            background-color: hsl(59, 93%, 50%);
+        }
     }
 </style>

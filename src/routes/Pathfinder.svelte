@@ -1,14 +1,18 @@
 <script lang="ts">
-    import { pathfindDijkstra } from "./algorithms";
-    import { createNewGrid, createWall, type Coordinate, type TNode } from "./util";
+    import { pathfindDijkstra, recursiveDivisionMaze } from "./algorithms";
+    import {
+        createNewGrid,
+        createWall,
+        pickOrientation,
+        type Coordinate,
+        type TNode,
+    } from "./util";
 
-    const totalCols = 21;
-    const totalRows = 21;
+    const totalCols = 45;
+    const totalRows = 45;
 
     let nodes: TNode[][] = $state([]);
-    let styleNodes: string[][] = $state<string[][]>([]);
-
-    nodes = createNewGrid(totalRows, totalCols);
+    // let styleNodes: string[][] = $state<string[][]>([]);
 
     let startNode: Coordinate = {
         col: 2,
@@ -28,14 +32,35 @@
         return classString;
     }
 
-    console.log("Test logging");
+    function resetNodes() {
+        nodes = createNewGrid(totalRows, totalCols);
+    }
+
+    resetNodes();
 </script>
 
 <div>Pathfinder Test Array</div>
 <button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 0)}>
     Find Path
 </button>
-<button onclick={() => createWall(5, 5, nodes, startNode, endNode)}> Create wall [5, 5] </button>
+<button
+    onclick={() => {
+        resetNodes();
+        recursiveDivisionMaze(
+            0,
+            0,
+            totalCols,
+            totalRows,
+            pickOrientation(totalCols, totalRows),
+            nodes,
+            startNode,
+            endNode,
+            20,
+        );
+    }}
+>
+    Create Maze
+</button>
 <div class="grid-wrapper">
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
@@ -47,8 +72,8 @@
 
 <style>
     :root {
-        --grid-rows: 21;
-        --grid-cols: 21;
+        --grid-rows: 45;
+        --grid-cols: 45;
         --node-transition-time: 100ms;
     }
 
@@ -61,9 +86,9 @@
 
     .grid-wrapper {
         display: grid;
-        width: 25rem;
-        grid-template-columns: repeat(var(--grid-cols), calc(25rem / var(--grid-cols)));
-        grid-template-rows: repeat(var(--grid-rows), calc(25rem / var(--grid-cols)));
+        width: min(80vw, 80vh);
+        grid-template-columns: repeat(var(--grid-cols), calc(min(80vw, 80vh) / var(--grid-cols)));
+        grid-template-rows: repeat(var(--grid-rows), calc(min(80vw, 80vh) / var(--grid-cols)));
     }
 
     .node-base {
@@ -74,7 +99,7 @@
         outline: 1px solid rgb(156, 156, 156);
         transition: var(--node-transition-time);
         &:hover {
-            box-shadow: inset 0 0 0.65vw 0.25vw hsl(0, 0%, 94%);
+            box-shadow: inset 0 0 0.25vw 0.12vw hsla(0, 100%, 50%, 0.33);
             transition: 0ms;
         }
         &.node-start {

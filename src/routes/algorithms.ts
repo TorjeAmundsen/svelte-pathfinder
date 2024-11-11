@@ -68,6 +68,8 @@ export async function pathfindDijkstra(
     // failedToFindPath();
 }
 
+// This function is gross and needs to be refactored.
+// Split the boolean clauses into two separate functions instead
 export async function recursiveDivisionMaze(
     x: number,
     y: number,
@@ -82,18 +84,8 @@ export async function recursiveDivisionMaze(
     if (width < 3 || height < 3) {
         return;
     }
-
-    let wallX: number;
-    let wallY: number;
-    let holeX: number;
-    let holeY: number;
-    let directionX: number;
-    let directionY: number;
-    let wallLength: number;
-
+    let wallX, wallY, holeX, holeY, wallLength;
     if (isHorizontal) {
-        directionX = 1;
-        directionY = 2;
         wallX = x;
         wallY = y + getRandomNumber(1, Math.floor(height / 2)) * 2 - 1;
         holeX = wallX + getRandomNumber(0, Math.floor(width / 2)) * 2;
@@ -104,22 +96,20 @@ export async function recursiveDivisionMaze(
         wallY = y;
         holeX = -1;
         holeY = wallY + getRandomNumber(0, Math.floor(height / 2)) * 2;
-        directionX = 0;
-        directionY = 1;
         wallLength = height;
     }
 
     if (isHorizontal) {
         for (let i = 0; i < wallLength; i++) {
             if (wallX + i !== holeX) {
-                createWall(wallY, wallX + 1, nodes, startNode, endNode);
+                createWall(wallY, wallX + i, nodes, startNode, endNode);
                 if (animationDelay) await delay(animationDelay);
             }
         }
     } else {
         for (let i = 0; i < wallLength; i++) {
             if (wallY + i !== holeY) {
-                createWall(wallY + i, wallX, nodes, startNode, endNode); // Maybe refactor to have start/end check outside?
+                createWall(wallY + i, wallX, nodes, startNode, endNode);
                 if (animationDelay) await delay(animationDelay);
             }
         }
@@ -137,11 +127,33 @@ export async function recursiveDivisionMaze(
             endNode,
             animationDelay,
         );
+        await recursiveDivisionMaze(
+            x,
+            wallY + 1,
+            width,
+            height - (wallY - y) - 1,
+            pickOrientation(width, height - (wallY - y) - 1),
+            nodes,
+            startNode,
+            endNode,
+            animationDelay,
+        );
     } else {
         await recursiveDivisionMaze(
             x,
             y,
             Math.abs(wallX - x),
+            height,
+            pickOrientation(Math.abs(wallX - x), height),
+            nodes,
+            startNode,
+            endNode,
+            animationDelay,
+        );
+        await recursiveDivisionMaze(
+            wallX + 1,
+            y,
+            width - (wallX - x) - 1,
             height,
             pickOrientation(width - (wallX - x) - 1, height),
             nodes,
@@ -151,3 +163,103 @@ export async function recursiveDivisionMaze(
         );
     }
 }
+
+/* export async function recursiveDivisionMazeHorizontal(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    nodes: TNode[][],
+    startNode: Coordinate,
+    endNode: Coordinate,
+    animationDelay: number,
+) {
+    if (width < 3 || height < 3) {
+        return;
+    }
+
+    let wallX = x;
+    let wallY = y + getRandomNumber(1, Math.floor(height / 2)) * 2 - 1;
+    let holeX = wallX + getRandomNumber(0, Math.floor(width / 2)) * 2;
+    let wallLength = width;
+
+    for (let i = 0; i < wallLength; i++) {
+        if (wallX + i !== holeX) {
+            createWall(wallY, wallX + 1, nodes, startNode, endNode);
+            if (animationDelay) await delay(animationDelay);
+        }
+    }
+
+    await recursiveDivisionMaze(
+        x,
+        y,
+        width,
+        Math.abs(wallY - y),
+        pickOrientation(width, Math.abs(wallY - y)),
+        nodes,
+        startNode,
+        endNode,
+        animationDelay,
+    );
+    await recursiveDivisionMaze(
+        x,
+        wallY + 1,
+        width,
+        height - (wallY - y) - 1,
+        pickOrientation(width, height - (wallY - y) - 1),
+        nodes,
+        startNode,
+        endNode,
+        animationDelay,
+    );
+}
+
+export async function recursiveDivisionMazeVertical(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    nodes: TNode[][],
+    startNode: Coordinate,
+    endNode: Coordinate,
+    animationDelay: number,
+) {
+    if (width < 3 || height < 3) {
+        return;
+    }
+
+    const wallX = x + getRandomNumber(1, Math.floor(width / 2)) * 2 - 1;
+    const wallY = y;
+    const holeY = wallY + getRandomNumber(0, Math.floor(height / 2)) * 2;
+    const wallLength = height;
+
+    for (let i = 0; i < wallLength; i++) {
+        if (wallY + i !== holeY) {
+            createWall(wallY + i, wallX, nodes, startNode, endNode);
+            if (animationDelay) await delay(animationDelay);
+        }
+    }
+
+    await recursiveDivisionMaze(
+        x,
+        y,
+        Math.abs(wallX - x),
+        height,
+        pickOrientation(Math.abs(wallX - x), height),
+        nodes,
+        startNode,
+        endNode,
+        animationDelay,
+    );
+    await recursiveDivisionMaze(
+        wallX + 1,
+        y,
+        width - (wallX - x) - 1,
+        height,
+        pickOrientation(width - (wallX - x) - 1, height),
+        nodes,
+        startNode,
+        endNode,
+        animationDelay,
+    );
+} */

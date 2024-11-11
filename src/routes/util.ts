@@ -83,3 +83,5 @@ export function pickOrientation(width: number, height: number): boolean {
         return Math.floor(Math.random() * 2) === 0 ? true : false;
     }
 }
+
+export function failedToFindPath() {}

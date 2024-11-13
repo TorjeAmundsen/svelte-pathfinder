@@ -1,38 +1,12 @@
-# sv
+# svelte-pathfinder
+Testing Svelte responsiveness compared to what I'm used to in React. Learning project, expect not-so-best practices lol.
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Barebones remake of the [pathfinding visualizer](https://github.com/TorjeAmundsen/pathfinding-visualizer) I made a year ago in vanilla JS.
 
-## Creating a project
+# Features:
+**Generate a random maze using a recursive division algorithm!**
+![Maze being generated](https://github.com/user-attachments/assets/fb5838e5-85b3-4c9a-95b6-6cbbaea178b1)
 
-If you're seeing this, you've probably already done this step. Congrats!
 
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+**Calculate optimal path between start node (red) and end node (purple) using Dijkstra's algorithm!**
+![Dijkstra's in progress](https://github.com/user-attachments/assets/cbcea5f3-c646-4549-8ef5-7da38b5ba769)

@@ -38,35 +38,6 @@ export function isWalkable(row: number, col: number, nodes: TNode[][]): boolean 
     return true;
 }
 
-export function createNewGrid(totalRows: number, totalCols: number) {
-    const nodes: TNode[][] = [];
-
-    for (let row = 0; row < totalRows; row++) {
-        const cols: TNode[] = [];
-
-        for (let col = 0; col < totalCols; col++) {
-            cols.push({
-                visited: false,
-                distance: Infinity,
-                isWall: false,
-                searching: false,
-                success: false,
-                failed: false,
-            });
-        }
-
-        nodes.push(cols);
-    }
-
-    for (let i = 0; i < totalRows; i++) {
-        for (let j = 0; j < totalCols; j++) {
-            console.log(nodes[i][j].distance === Infinity);
-        }
-    }
-
-    return nodes;
-}
-
 export function isSlotTaken(row: number, col: number, startNode: Coordinate, endNode: Coordinate) {
     return (
         (row === startNode.row && col === startNode.col) ||
@@ -130,6 +101,18 @@ export function failedToFindPath(nodes: TNode[][]) {
     }
 }
 
+export async function clearSearchProgress(nodes: TNode[][]) {
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = 0; j < nodes[i].length; j++) {
+            nodes[i][j].distance = Infinity;
+            nodes[i][j].visited = false;
+            nodes[i][j].searching = false;
+            nodes[i][j].success = false;
+            nodes[i][j].failed = false;
+        }
+    }
+}
+
 export async function visualizePath(
     nodes: TNode[][],
     startNode: Coordinate,
@@ -139,7 +122,9 @@ export async function visualizePath(
     const path = backtrackPath(nodes, startNode, endNode);
 
     animationDelay *= 4;
-    nodes[endNode.row][endNode.col].searching = false;
+
+    nodes[startNode.row][startNode.col].searching = false;
+    nodes[startNode.row][startNode.col].success = true;
 
     for (let i = 0; i < path.length; i++) {
         const e = path[i];
@@ -149,5 +134,6 @@ export async function visualizePath(
     }
 
     if (animationDelay) await delay(animationDelay);
+    nodes[endNode.row][endNode.col].searching = false;
     nodes[endNode.row][endNode.col].success = true;
 }

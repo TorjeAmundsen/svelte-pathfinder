@@ -1,12 +1,6 @@
 <script lang="ts">
     import { pathfindDijkstra, recursiveDivisionMaze } from "./algorithms";
-    import {
-        createNewGrid,
-        createWall,
-        pickOrientation,
-        type Coordinate,
-        type TNode,
-    } from "./util";
+    import { delay, pickOrientation, type Coordinate, type TNode } from "./util";
 
     const totalRows = 33;
     const totalCols = 33;
@@ -14,10 +8,8 @@
     let nodes: TNode[][] = $state([]);
 
     let nodeTransitionTime = "100ms";
-    let animationTime = "1000ms";
-    let searchedBg = "hsl(263, 52%, 30%)";
-
-    let elements: HTMLElement[][] = Array.from(Array(totalRows), () => new Array(totalCols));
+    let animationTime = "1500ms";
+    let searchedBg = "hsla(194, 88%, 61%, 0.87)";
 
     let startNode: Coordinate = {
         col: 2,
@@ -29,31 +21,62 @@
         row: totalRows - 3,
     };
 
+    let mazeInProgress = $state(false);
+
     function getNodeClass(row: number, col: number) {
         let classString = "node-base";
-        if (nodes[row][col].success) classString += " node-success";
+        const currentNode = nodes[row][col];
+
+        if (currentNode.success) classString += " node-found-path";
         else if (row === startNode.row && col === startNode.col) classString += " node-start";
         else if (row === endNode.row && col === endNode.col) classString += " node-end";
-        else if (nodes[row][col].isWall) classString += " node-wall";
+        else if (currentNode.searching) classString += " node-searching";
+        else if (currentNode.isWall) classString += " node-wall";
         return classString;
     }
 
-    function resetNodes() {
-        nodes = createNewGrid(totalRows, totalCols);
+    function createNewGrid(totalRows: number, totalCols: number) {
+        const newNodes: TNode[][] = [];
+
+        for (let row = 0; row < totalRows; row++) {
+            const cols: TNode[] = [];
+
+            for (let col = 0; col < totalCols; col++) {
+                cols.push({
+                    visited: false,
+                    distance: Infinity,
+                    isWall: false,
+                    searching: false,
+                    success: false,
+                    failed: false,
+                });
+            }
+
+            newNodes.push(cols);
+        }
+
+        nodes = newNodes;
     }
 
-    resetNodes();
+    createNewGrid(totalRows, totalCols);
 </script>
 
 <div>Pathfinder Test Array; Svelte Responsiveness</div>
-<button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 5)}>
+<button
+    disabled={nodes[startNode.row][startNode.col].searching || mazeInProgress}
+    class="search-button"
+    onclick={() => pathfindDijkstra(nodes, startNode, endNode, 8)}
+>
     Find Path
 </button>
 <button
+    disabled={nodes[startNode.row][startNode.col].searching || mazeInProgress}
     class="maze-button"
-    onclick={() => {
-        resetNodes();
-        recursiveDivisionMaze(
+    onclick={async () => {
+        mazeInProgress = true;
+        createNewGrid(totalRows, totalCols);
+        await delay(500);
+        await recursiveDivisionMaze(
             0,
             0,
             totalCols,
@@ -62,8 +85,9 @@
             nodes,
             startNode,
             endNode,
-            5,
+            10,
         );
+        mazeInProgress = false;
     }}
 >
     Create Maze
@@ -74,12 +98,7 @@
 >
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
-            <div
-                id={`${row}-${col}`}
-                bind:this={elements[row][col]}
-                class={getNodeClass(row, col)}
-                onclick={() => console.log(elements[row][col])}
-            ></div>
+            <div id={`${row}-${col}`} class={getNodeClass(row, col)}></div>
         {/each}
     {/each}
 </div>
@@ -116,14 +135,14 @@
         }
 
         &.node-start {
-            background-color: hsl(130, 53%, 56%);
+            background-color: hsl(0, 61%, 41%);
         }
 
         &.node-end {
             background-color: hsl(263, 53%, 56%);
         }
 
-        &.searching {
+        &.node-searching {
             animation: searchAnimation var(--animation-time);
             animation-iteration-count: 1;
             background-color: var(--searched-bg);
@@ -136,6 +155,7 @@
             background-color: hsl(217, 15%, 17%);
             transition: 80ms;
         }
+
         &.node-found-path {
             background-color: hsl(59, 93%, 50%);
         }
@@ -143,7 +163,7 @@
 
     @keyframes searchAnimation {
         0% {
-            background-color: hsla(138, 100%, 50%, 0);
+            background-color: hsl(108, 89%, 41%);
         }
         25% {
             background-color: hsla(147, 100%, 50%, 1);

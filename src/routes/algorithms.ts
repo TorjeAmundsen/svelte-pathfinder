@@ -1,5 +1,5 @@
 import {
-    backtrackPath,
+    clearSearchProgress,
     createWall,
     delay,
     failedToFindPath,
@@ -8,6 +8,7 @@ import {
     pickOrientation,
     visualizePath,
     type Coordinate,
+    type QueueItem,
     type TNode,
 } from "./util";
 
@@ -17,6 +18,7 @@ export async function pathfindDijkstra(
     endNode: Coordinate,
     animationDelay: number,
 ) {
+    if (animationDelay) await clearSearchProgress(nodes);
     const directions = [
         [0, 1],
         [0, -1],
@@ -25,11 +27,11 @@ export async function pathfindDijkstra(
     ];
     nodes[startNode.row][startNode.col].distance = 0;
 
-    const queue: { row: number; col: number; distance: number }[] = [];
+    const queue: QueueItem[] = [];
+
     queue.push({ row: startNode.row, col: startNode.col, distance: 0 });
 
     while (queue.length > 0) {
-        console.log(nodes);
         const {
             row: currentRow,
             col: currentCol,
@@ -45,7 +47,7 @@ export async function pathfindDijkstra(
 
         if (animationDelay) await delay(animationDelay);
 
-        if (currentRow == endNode.row && currentCol == endNode.col) {
+        if (currentRow === endNode.row && currentCol === endNode.col) {
             await visualizePath(nodes, startNode, endNode, animationDelay);
             return;
         }
@@ -56,7 +58,6 @@ export async function pathfindDijkstra(
 
             if (isWalkable(newRow, newCol, nodes)) {
                 const newDistance = currentDistance + 1;
-                console.log(nodes[newRow][newCol]);
 
                 if (newDistance < nodes[newRow][newCol].distance) {
                     nodes[newRow][newCol].distance = newDistance;
@@ -166,7 +167,7 @@ export async function recursiveDivisionMaze(
     }
 }
 
-export async function recursiveDivisionMazeHorizontal(
+/* export async function recursiveDivisionMazeHorizontal(
     x: number,
     y: number,
     width: number,
@@ -264,4 +265,4 @@ export async function recursiveDivisionMazeVertical(
         endNode,
         animationDelay,
     );
-}
+} */

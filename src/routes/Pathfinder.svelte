@@ -8,10 +8,14 @@
         type TNode,
     } from "./util";
 
-    const totalRows = 45;
-    const totalCols = 45;
+    const totalRows = 33;
+    const totalCols = 33;
 
     let nodes: TNode[][] = $state([]);
+
+    let nodeTransitionTime = "100ms";
+    let animationTime = "1000ms";
+    let searchedBg = "hsl(263, 52%, 30%)";
 
     let elements: HTMLElement[][] = Array.from(Array(totalRows), () => new Array(totalCols));
 
@@ -27,7 +31,8 @@
 
     function getNodeClass(row: number, col: number) {
         let classString = "node-base";
-        if (row === startNode.row && col === startNode.col) classString += " node-start";
+        if (nodes[row][col].success) classString += " node-success";
+        else if (row === startNode.row && col === startNode.col) classString += " node-start";
         else if (row === endNode.row && col === endNode.col) classString += " node-end";
         else if (nodes[row][col].isWall) classString += " node-wall";
         return classString;
@@ -40,8 +45,8 @@
     resetNodes();
 </script>
 
-<div>Pathfinder Test Array</div>
-<button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 0)}>
+<div>Pathfinder Test Array; Svelte Responsiveness</div>
+<button class="search-button" onclick={() => pathfindDijkstra(nodes, startNode, endNode, 5)}>
     Find Path
 </button>
 <button
@@ -63,27 +68,23 @@
 >
     Create Maze
 </button>
-<div class="grid-wrapper">
+<div
+    class="grid-wrapper"
+    style="--node-transition-time: {nodeTransitionTime}; --animation-time: {animationTime}; --searched-bg: {searchedBg};"
+>
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
             <div
-                id={`${row}, ${col}`}
+                id={`${row}-${col}`}
                 bind:this={elements[row][col]}
                 class={getNodeClass(row, col)}
                 onclick={() => console.log(elements[row][col])}
             ></div>
-            {console.log(`getNodeClass(${row}, ${col}) -> ${getNodeClass(row, col)}`)}
         {/each}
     {/each}
 </div>
 
 <style>
-    :root {
-        --grid-rows: 45;
-        --grid-cols: 45;
-        --node-transition-time: 100ms;
-    }
-
     .search-button,
     .maze-button {
         padding: 5px;
@@ -93,6 +94,8 @@
     }
 
     .grid-wrapper {
+        --grid-rows: 33;
+        --grid-cols: 33;
         display: grid;
         width: min(80vw, 80vh);
         grid-template-columns: repeat(var(--grid-cols), calc(min(80vw, 80vh) / var(--grid-cols)));
@@ -121,13 +124,35 @@
         }
 
         &.searching {
+            animation: searchAnimation var(--animation-time);
+            animation-iteration-count: 1;
+            background-color: var(--searched-bg);
+            &:hover {
+                box-shadow: none;
+            }
         }
 
         &.node-wall {
             background-color: hsl(217, 15%, 17%);
+            transition: 80ms;
         }
-        &.found-path {
+        &.node-found-path {
             background-color: hsl(59, 93%, 50%);
+        }
+    }
+
+    @keyframes searchAnimation {
+        0% {
+            background-color: hsla(138, 100%, 50%, 0);
+        }
+        25% {
+            background-color: hsla(147, 100%, 50%, 1);
+        }
+        50% {
+            background-color: hsla(167, 100%, 50%, 1);
+        }
+        100% {
+            background-color: hsla(194, 88%, 61%, 0.87);
         }
     }
 </style>

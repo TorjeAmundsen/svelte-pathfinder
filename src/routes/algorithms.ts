@@ -1,17 +1,20 @@
 import {
+    backtrackPath,
     createWall,
     delay,
+    failedToFindPath,
     getRandomNumber,
     isWalkable,
     pickOrientation,
+    visualizePath,
     type Coordinate,
     type TNode,
 } from "./util";
 
 export async function pathfindDijkstra(
     nodes: TNode[][],
-    start: Coordinate,
-    end: Coordinate,
+    startNode: Coordinate,
+    endNode: Coordinate,
     animationDelay: number,
 ) {
     const directions = [
@@ -20,12 +23,13 @@ export async function pathfindDijkstra(
         [1, 0],
         [-1, 0],
     ];
-    nodes[start.row][start.col].distance = 0;
+    nodes[startNode.row][startNode.col].distance = 0;
 
     const queue: { row: number; col: number; distance: number }[] = [];
-    queue.push({ row: start.row, col: start.col, distance: 0 });
+    queue.push({ row: startNode.row, col: startNode.col, distance: 0 });
 
-    while (queue.length < 0) {
+    while (queue.length > 0) {
+        console.log(nodes);
         const {
             row: currentRow,
             col: currentCol,
@@ -37,15 +41,12 @@ export async function pathfindDijkstra(
         }
 
         nodes[currentRow][currentCol].visited = true;
-        // TODO add "searching" animation through either storing as single property
-        // with different values which make the frontend render differently,
-        // or several properties containing the different states independently
+        nodes[currentRow][currentCol].searching = true;
 
         if (animationDelay) await delay(animationDelay);
 
-        if (currentRow == end.row && currentCol == end.col) {
-            //const path = backtrackPath();
-            // await visualizePath({distance: currentDistance, path}, animationDelay);
+        if (currentRow == endNode.row && currentCol == endNode.col) {
+            await visualizePath(nodes, startNode, endNode, animationDelay);
             return;
         }
 
@@ -53,8 +54,9 @@ export async function pathfindDijkstra(
             const newRow = currentRow + x;
             const newCol = currentCol + y;
 
-            if (isWalkable(newRow, newCol, nodes[newRow][newCol])) {
+            if (isWalkable(newRow, newCol, nodes)) {
                 const newDistance = currentDistance + 1;
+                console.log(nodes[newRow][newCol]);
 
                 if (newDistance < nodes[newRow][newCol].distance) {
                     nodes[newRow][newCol].distance = newDistance;
@@ -65,7 +67,7 @@ export async function pathfindDijkstra(
             }
         }
     }
-    // failedToFindPath();
+    failedToFindPath(nodes);
 }
 
 // This function is gross and needs to be refactored.
@@ -164,7 +166,7 @@ export async function recursiveDivisionMaze(
     }
 }
 
-/* export async function recursiveDivisionMazeHorizontal(
+export async function recursiveDivisionMazeHorizontal(
     x: number,
     y: number,
     width: number,
@@ -262,4 +264,4 @@ export async function recursiveDivisionMazeVertical(
         endNode,
         animationDelay,
     );
-} */
+}

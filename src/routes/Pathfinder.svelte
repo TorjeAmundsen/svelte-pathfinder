@@ -1,6 +1,13 @@
 <script lang="ts">
     import { pathfindDijkstra, recursiveDivisionMaze } from "./algorithms";
-    import { delay, pickOrientation, type Coordinate, type TNode } from "./util";
+    import {
+        createWall,
+        delay,
+        isNodeDrawable,
+        pickOrientation,
+        type Coordinate,
+        type TNode,
+    } from "./util";
 
     const totalRows = 33;
     const totalCols = 33;
@@ -13,15 +20,19 @@
     let animationTime = "1500ms";
     let searchedBg = "hsla(194, 88%, 61%, 0.87)";
 
-    let startNode: Coordinate = {
+    let holdingStartNode = false;
+    let holdingEndNode = false;
+    let drawingWall = false;
+
+    let startNode: Coordinate = $state({
         col: 2,
         row: 2,
-    };
+    });
 
-    let endNode: Coordinate = {
+    let endNode: Coordinate = $state({
         col: totalCols - 3,
         row: totalRows - 3,
-    };
+    });
 
     let mazeInProgress = $state(false);
 
@@ -30,10 +41,12 @@
         const currentNode = nodes[row][col];
 
         if (currentNode.success) classString += " node-found-path";
-        else if (row === startNode.row && col === startNode.col) classString += " node-start";
+
+        if (row === startNode.row && col === startNode.col) classString += " node-start";
         else if (row === endNode.row && col === endNode.col) classString += " node-end";
         else if (currentNode.searching) classString += " node-searching";
-        else if (currentNode.isWall) classString += " node-wall";
+
+        if (currentNode.isWall) classString += " node-wall";
         return classString;
     }
 
@@ -56,6 +69,8 @@
                     searching: false,
                     success: false,
                     failed: false,
+                    isStart: false,
+                    isEnd: false,
                 });
             }
 
@@ -65,22 +80,78 @@
         nodes = newNodes;
     }
 
+    function isAlgorithmInProgress() {
+        return nodes[startNode.row][startNode.col].searching || mazeInProgress;
+    }
+
+    function handleMouseDown(row: number, col: number) {
+        if (isAlgorithmInProgress()) {
+            return;
+        }
+
+        drawingWall = false;
+        holdingStartNode = false;
+        holdingEndNode = false;
+
+        if (isNodeDrawable(row, col, startNode, endNode)) {
+            drawingWall = true;
+            createWall(row, col, nodes, startNode, endNode);
+        } else if (row === startNode.row && col === startNode.col) {
+            holdingStartNode = true;
+        } else if (row === endNode.row && col === endNode.col) {
+            holdingEndNode = true;
+        }
+    }
+
+    function handleMouseEnter(row: number, col: number) {
+        if (
+            isAlgorithmInProgress() ||
+            nodes[row][col].isWall ||
+            !isNodeDrawable(row, col, startNode, endNode)
+        ) {
+            return;
+        }
+
+        if (drawingWall) {
+            createWall(row, col, nodes, startNode, endNode);
+        } else if (holdingStartNode || holdingEndNode) {
+            if (holdingStartNode) {
+                nodes[startNode.row][startNode.col].isStart = false;
+                startNode.row = row;
+                startNode.col = col;
+                nodes[startNode.row][startNode.col].isStart = true;
+            } else if (holdingEndNode) {
+                nodes[endNode.row][endNode.col].isEnd = false;
+                endNode.row = row;
+                endNode.col = col;
+                nodes[endNode.row][endNode.col].isEnd = true;
+            }
+            // const nodeContainingStart = nodes[startNode.row][startNode.col];
+        }
+    }
+
+    function handleMouseUp() {
+        drawingWall = false;
+        holdingStartNode = false;
+        holdingEndNode = false;
+    }
+
     createNewGrid(totalRows, totalCols);
 </script>
 
 <div>Pathfinder Test Array; Svelte Responsiveness</div>
 <button
-    disabled={nodes[startNode.row][startNode.col].searching || mazeInProgress}
+    disabled={isAlgorithmInProgress()}
     class="search-button"
     onclick={() => {
         searchedNodesCount = 0;
         pathfindDijkstra(nodes, startNode, endNode, 8, increaseSearchedNodesCount);
     }}
 >
-    Find Path
+    Search w/ Dijkstra's
 </button>
 <button
-    disabled={nodes[startNode.row][startNode.col].searching || mazeInProgress}
+    disabled={isAlgorithmInProgress()}
     class="maze-button"
     onclick={async () => {
         mazeInProgress = true;
@@ -102,6 +173,11 @@
 >
     Create Maze
 </button>
+<button
+    class="clear-button"
+    disabled={isAlgorithmInProgress()}
+    onclick={() => createNewGrid(totalRows, totalCols)}>Clear Nodes</button
+>
 <div>Searched nodes: {searchedNodesCount}</div>
 <div
     class="grid-wrapper"
@@ -109,16 +185,25 @@
 >
     {#each nodes as rowArray, row}
         {#each rowArray as node, col}
-            <div id={`${row}-${col}`} class={getNodeClass(row, col)}></div>
+            <div
+                id={`${row}-${col}`}
+                class={getNodeClass(row, col)}
+                onmousedown={() => handleMouseDown(row, col)}
+                onmouseenter={() => handleMouseEnter(row, col)}
+                onmouseup={() => handleMouseUp()}
+                role="none"
+            ></div>
         {/each}
     {/each}
 </div>
 
 <style>
     .search-button,
-    .maze-button {
-        padding: 5px;
-        width: 6rem;
+    .maze-button,
+    .clear-button {
+        font-size: 1rem;
+        padding: 6px;
+        width: 11rem;
         margin-top: 4px;
         margin-bottom: 6px;
     }
@@ -133,6 +218,7 @@
     }
 
     .node-base {
+        user-select: none;
         text-align: center;
         background-color: hsl(218, 11%, 86%);
         width: 1fr;
@@ -143,14 +229,6 @@
         &:hover {
             box-shadow: inset 0 0 0.25vw 0.12vw hsla(0, 100%, 50%, 0.33);
             transition: 0ms;
-        }
-
-        &.node-start {
-            background-color: hsl(0, 61%, 41%);
-        }
-
-        &.node-end {
-            background-color: hsl(263, 53%, 56%);
         }
 
         &.node-searching {
@@ -165,6 +243,28 @@
         &.node-wall {
             background-color: hsl(217, 15%, 17%);
             transition: 80ms;
+        }
+
+        &.node-start {
+            &::before {
+                font-size: 10px;
+                font-weight: 800;
+                color: rgb(255, 255, 255);
+                content: "Start";
+                text-shadow: 0 0 3px black;
+            }
+            background-color: hsl(0, 61%, 41%);
+        }
+
+        &.node-end {
+            &::before {
+                font-size: 10px;
+                font-weight: 800;
+                color: rgb(255, 255, 255);
+                content: "End";
+                text-shadow: 0 0 3px black;
+            }
+            background-color: hsl(263, 53%, 56%);
         }
 
         &.node-found-path {

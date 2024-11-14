@@ -11,6 +11,8 @@ export type TNode = {
     previous?: Coordinate;
     success: boolean;
     failed: boolean;
+    isStart: boolean;
+    isEnd: boolean;
 };
 
 export type Path = {
@@ -136,4 +138,15 @@ export async function visualizePath(
     if (animationDelay) await delay(animationDelay);
     nodes[endNode.row][endNode.col].searching = false;
     nodes[endNode.row][endNode.col].success = true;
+}
+
+export function isNodeDrawable(
+    row: number,
+    col: number,
+    startNode: Coordinate,
+    endNode: Coordinate,
+) {
+    if (row === startNode.row && col === startNode.col) return false;
+    if (row === endNode.row && col === endNode.col) return false;
+    return true;
 }

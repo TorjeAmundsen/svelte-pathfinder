@@ -39,6 +39,8 @@ export async function pathfindDijkstra(
             distance: currentDistance,
         } = queue.shift() || { row: 0, col: 0, distance: 0 };
 
+        countFunction(1);
+
         if (nodes[currentRow][currentCol].isWall || nodes[currentRow][currentCol].visited) {
             continue;
         }
@@ -63,7 +65,6 @@ export async function pathfindDijkstra(
                 if (newDistance < nodes[newRow][newCol].distance) {
                     nodes[newRow][newCol].distance = newDistance;
                     nodes[newRow][newCol].previous = { row: currentRow, col: currentCol };
-                    countFunction(1);
                     queue.push({ row: newRow, col: newCol, distance: newDistance });
                 }
             }
@@ -71,6 +72,14 @@ export async function pathfindDijkstra(
     }
     failedToFindPath(nodes);
 }
+
+function pathfindAstar(
+    nodes: TNode[][],
+    startNode: Coordinate,
+    endNode: Coordinate,
+    animationDelay: number,
+    countFunction: (amount: number) => void,
+) {}
 
 // This function is gross and needs to be refactored.
 // Split the boolean clauses into two separate functions instead

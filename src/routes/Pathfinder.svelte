@@ -5,6 +5,8 @@
     const totalRows = 33;
     const totalCols = 33;
 
+    let searchedNodesCount = $state(0);
+
     let nodes: TNode[][] = $state([]);
 
     let nodeTransitionTime = "100ms";
@@ -35,7 +37,12 @@
         return classString;
     }
 
+    function increaseSearchedNodesCount(amount: number) {
+        searchedNodesCount += amount;
+    }
+
     function createNewGrid(totalRows: number, totalCols: number) {
+        searchedNodesCount = 0;
         const newNodes: TNode[][] = [];
 
         for (let row = 0; row < totalRows; row++) {
@@ -65,7 +72,10 @@
 <button
     disabled={nodes[startNode.row][startNode.col].searching || mazeInProgress}
     class="search-button"
-    onclick={() => pathfindDijkstra(nodes, startNode, endNode, 8)}
+    onclick={() => {
+        searchedNodesCount = 0;
+        pathfindDijkstra(nodes, startNode, endNode, 8, increaseSearchedNodesCount);
+    }}
 >
     Find Path
 </button>
@@ -92,6 +102,7 @@
 >
     Create Maze
 </button>
+<div>Searched nodes: {searchedNodesCount}</div>
 <div
     class="grid-wrapper"
     style="--node-transition-time: {nodeTransitionTime}; --animation-time: {animationTime}; --searched-bg: {searchedBg};"

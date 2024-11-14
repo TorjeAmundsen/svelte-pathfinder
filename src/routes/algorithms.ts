@@ -17,6 +17,7 @@ export async function pathfindDijkstra(
     startNode: Coordinate,
     endNode: Coordinate,
     animationDelay: number,
+    countFunction: (amount: number) => void,
 ) {
     if (animationDelay) await clearSearchProgress(nodes);
     const directions = [
@@ -62,7 +63,7 @@ export async function pathfindDijkstra(
                 if (newDistance < nodes[newRow][newCol].distance) {
                     nodes[newRow][newCol].distance = newDistance;
                     nodes[newRow][newCol].previous = { row: currentRow, col: currentCol };
-
+                    countFunction(1);
                     queue.push({ row: newRow, col: newCol, distance: newDistance });
                 }
             }

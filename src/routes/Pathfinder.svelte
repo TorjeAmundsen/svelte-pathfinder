@@ -1,9 +1,9 @@
 <script lang="ts">
     import { pathfindDijkstra, recursiveDivisionMaze } from "./algorithms";
     import {
-        createWall,
         delay,
         isNodeDrawable,
+        isSlotTaken,
         pickOrientation,
         type Coordinate,
         type TNode,
@@ -12,17 +12,18 @@
     const totalRows = 33;
     const totalCols = 33;
 
-    let searchedNodesCount = $state(0);
-
     let nodes: TNode[][] = $state([]);
 
     let nodeTransitionTime = "100ms";
-    let animationTime = "1500ms";
+    let animationTime = $state("1500ms");
     let searchedBg = "hsla(194, 88%, 61%, 0.87)";
 
+    // Used by mouse event handlers to choose the correct action
     let holdingStartNode = false;
     let holdingEndNode = false;
     let drawingWall = false;
+
+    let searched = false;
 
     let startNode: Coordinate = $state({
         col: 2,
@@ -50,12 +51,8 @@
         return classString;
     }
 
-    function increaseSearchedNodesCount(amount: number) {
-        searchedNodesCount += amount;
-    }
-
     function createNewGrid(totalRows: number, totalCols: number) {
-        searchedNodesCount = 0;
+        searched = false;
         const newNodes: TNode[][] = [];
 
         for (let row = 0; row < totalRows; row++) {
@@ -78,6 +75,61 @@
         }
 
         nodes = newNodes;
+    }
+
+    function clearSearch() {
+        for (let row = 0; row < totalRows; row++) {
+            for (let col = 0; col < totalCols; col++) {
+                nodes[row][col].distance = Infinity;
+                nodes[row][col].visited = false;
+                nodes[row][col].failed = false;
+                nodes[row][col].success = false;
+            }
+        }
+    }
+
+    function setStartNode(row: number, col: number) {
+        nodes[startNode.row][startNode.col].isStart = false;
+        startNode.row = row;
+        startNode.col = col;
+        nodes[row][col].isStart = true;
+    }
+
+    function setEndNode(row: number, col: number) {
+        nodes[endNode.row][endNode.col].isStart = false;
+        endNode.row = row;
+        endNode.col = col;
+        nodes[row][col].isStart = true;
+    }
+
+    function instantSearch() {
+        clearSearch();
+        pathfindDijkstra(nodes, startNode, endNode, 0);
+    }
+
+    function createWall(
+        row: number,
+        col: number,
+        nodes: TNode[][],
+        startNode: Coordinate,
+        endNode: Coordinate,
+    ) {
+        if (isSlotTaken(row, col, startNode, endNode)) {
+            return;
+        }
+
+        nodes[row][col].isWall = true;
+        if (searched) {
+            instantSearch();
+        }
+    }
+
+    function clearWalls() {
+        for (let i = 0; i < totalRows; i++) {
+            for (let j = 0; j < totalCols; j++) {
+                nodes[i][j].isWall = false;
+            }
+        }
     }
 
     function isAlgorithmInProgress() {
@@ -116,17 +168,16 @@
             createWall(row, col, nodes, startNode, endNode);
         } else if (holdingStartNode || holdingEndNode) {
             if (holdingStartNode) {
-                nodes[startNode.row][startNode.col].isStart = false;
-                startNode.row = row;
-                startNode.col = col;
-                nodes[startNode.row][startNode.col].isStart = true;
+                setStartNode(row, col);
             } else if (holdingEndNode) {
-                nodes[endNode.row][endNode.col].isEnd = false;
-                endNode.row = row;
-                endNode.col = col;
-                nodes[endNode.row][endNode.col].isEnd = true;
+                setEndNode(row, col);
             }
             // const nodeContainingStart = nodes[startNode.row][startNode.col];
+        }
+
+        if (searched && (drawingWall || holdingStartNode || holdingEndNode)) {
+            clearSearch();
+            pathfindDijkstra(nodes, startNode, endNode, 0);
         }
     }
 
@@ -143,9 +194,11 @@
 <button
     disabled={isAlgorithmInProgress()}
     class="search-button"
-    onclick={() => {
-        searchedNodesCount = 0;
-        pathfindDijkstra(nodes, startNode, endNode, 8, increaseSearchedNodesCount);
+    onclick={async () => {
+        animationTime = "1500ms";
+        await pathfindDijkstra(nodes, startNode, endNode, 8);
+        animationTime = "0ms";
+        searched = true;
     }}
 >
     Search w/ Dijkstra's
@@ -155,8 +208,9 @@
     class="maze-button"
     onclick={async () => {
         mazeInProgress = true;
-        createNewGrid(totalRows, totalCols);
-        await delay(500);
+        clearSearch();
+        clearWalls();
+        animationTime = "0ms";
         await recursiveDivisionMaze(
             0,
             0,
@@ -167,6 +221,8 @@
             startNode,
             endNode,
             10,
+            searched,
+            instantSearch,
         );
         mazeInProgress = false;
     }}
@@ -178,7 +234,6 @@
     disabled={isAlgorithmInProgress()}
     onclick={() => createNewGrid(totalRows, totalCols)}>Clear Nodes</button
 >
-<div>Searched nodes: {searchedNodesCount}</div>
 <div
     class="grid-wrapper"
     style="--node-transition-time: {nodeTransitionTime}; --animation-time: {animationTime}; --searched-bg: {searchedBg};"
@@ -227,7 +282,7 @@
         transition: var(--node-transition-time);
 
         &:hover {
-            box-shadow: inset 0 0 0.25vw 0.12vw hsla(0, 100%, 50%, 0.33);
+            box-shadow: inset 0 0 0.25vw 0.12vw hsla(232, 20%, 29%, 0.33);
             transition: 0ms;
         }
 
@@ -235,9 +290,6 @@
             animation: searchAnimation var(--animation-time);
             animation-iteration-count: 1;
             background-color: var(--searched-bg);
-            &:hover {
-                box-shadow: none;
-            }
         }
 
         &.node-wall {

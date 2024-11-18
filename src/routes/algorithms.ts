@@ -17,7 +17,6 @@ export async function pathfindDijkstra(
     startNode: Coordinate,
     endNode: Coordinate,
     animationDelay: number,
-    countFunction: (amount: number) => void,
 ) {
     if (animationDelay) await clearSearchProgress(nodes);
     const directions = [
@@ -38,8 +37,6 @@ export async function pathfindDijkstra(
             col: currentCol,
             distance: currentDistance,
         } = queue.shift() || { row: 0, col: 0, distance: 0 };
-
-        countFunction(1);
 
         if (nodes[currentRow][currentCol].isWall || nodes[currentRow][currentCol].visited) {
             continue;
@@ -93,10 +90,13 @@ export async function recursiveDivisionMaze(
     startNode: Coordinate,
     endNode: Coordinate,
     animationDelay: number,
+    searched: boolean,
+    runAlgo: () => void,
 ) {
     if (width < 3 || height < 3) {
         return;
     }
+
     let wallX, wallY, holeX, holeY, wallLength;
     if (isHorizontal) {
         wallX = x;
@@ -127,6 +127,9 @@ export async function recursiveDivisionMaze(
             }
         }
     }
+    if (searched) {
+        runAlgo();
+    }
 
     if (isHorizontal) {
         await recursiveDivisionMaze(
@@ -139,6 +142,8 @@ export async function recursiveDivisionMaze(
             startNode,
             endNode,
             animationDelay,
+            searched,
+            runAlgo,
         );
         await recursiveDivisionMaze(
             x,
@@ -150,6 +155,8 @@ export async function recursiveDivisionMaze(
             startNode,
             endNode,
             animationDelay,
+            searched,
+            runAlgo,
         );
     } else {
         await recursiveDivisionMaze(
@@ -162,6 +169,8 @@ export async function recursiveDivisionMaze(
             startNode,
             endNode,
             animationDelay,
+            searched,
+            runAlgo,
         );
         await recursiveDivisionMaze(
             wallX + 1,
@@ -173,6 +182,8 @@ export async function recursiveDivisionMaze(
             startNode,
             endNode,
             animationDelay,
+            searched,
+            runAlgo,
         );
     }
 }
